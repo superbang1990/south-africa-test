@@ -42,6 +42,16 @@ public class Entity {
 
     private String string20;
 
+    private String string21;
+
+    public String getString21() {
+        return string21;
+    }
+
+    public void setString21(String string21) {
+        this.string21 = string21;
+    }
+
     public String getString1() {
         return string1;
     }

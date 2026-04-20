@@ -1,54 +1,112 @@
 package org.marsclub.test;
 
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
+import org.apache.commons.math3.util.Pair;
+
 import java.io.*;
 import java.util.*;
 
 public class Temp {
 
     private static void a() throws Exception {
-        BufferedReader br = new BufferedReader(new FileReader("D:\\Workspace\\test\\src\\main\\resources\\temp\\A.txt"));
+        BufferedReader br = new BufferedReader(new FileReader("E:\\south-africa-test\\src\\main\\resources\\temp\\A.txt"));
         StringBuilder sbf = new StringBuilder();
         for (String line = br.readLine(); line != null; line = br.readLine()) {
-            sbf.append("'" + line + "',");
+            sbf.append("'").append(line).append("',");
         }
         System.out.println(sbf);
     }
 
     public static void main(String[] args) throws Exception {
-//        List<String> exists = readExists();
-//        List<Entity> list = ExcelReadUtil.read(ExcelReadUtil.PREFIX + "Subsidiary Vehicle Stock--gps.xlsx", 0);
-//        File file = new File(ExcelReadUtil.PREFIX + "remark.sql");
-//        file.createNewFile();
-//        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-//        long start = 0L;
-//        for (Entity entity : list) {
-//            String vin = entity.getString1().trim(),
-//                    materialCode = entity.getString9().trim(),
-//                    remark = entity.getString8().trim();
-////            if (exists.contains(vin)) {
-////                continue;
-////            }
-//            String sql = "\n" +
-//                    "insert into vehicle_base_info_ext (`id`, `sales_org_code`, `vin`, `material_code`, `overseas_model`, `tenant_id`) " +
-//                    "values (" +
-//                    "'" + start ++ + "', " +
-//                    "'', " +
-//                    "'" + vin + "', " +
-//                    "'" + materialCode + "', " +
-//                    "\"" + remark + "\", " +
-//                    "'570272200');";
-//            writer.write(sql);
-//        }
-//        writer.flush();
-//        writer.close();
-        List<Entity> list = ExcelReadUtil.read(ExcelReadUtil.PREFIX + "MIB RETURN1.xlsx", 3);
-        StringBuilder sbf = new StringBuilder();
-        for (Entity entity : list) {
-            sbf.append("'" + entity.getString1() + "',");
+        a();
+//        findVin();
+//        maintainModels();
+    }
+
+    private static void maintainModels() {
+        List<Entity> chery = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 0),
+                oj = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 1),
+                lepas = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 2),
+                icaur = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 3);
+
+        List<Entity> allInDB = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 7);
+        HashMap<String, List<Entity>> brandToEntities = new HashMap<>();
+        allInDB.forEach(entity -> {
+            List<Entity> list;
+            if (brandToEntities.containsKey(entity.getString6())) {
+                list = brandToEntities.get(entity.getString6());
+            } else {
+                brandToEntities.put(entity.getString6(), list = new ArrayList<>());
+            }
+            list.add(entity);
+        });
+        for(Map.Entry<String, List<Entity>> entry : brandToEntities.entrySet()) {
+            String brand = entry.getKey();
+            if (brand != null && brand.equalsIgnoreCase("chery")) {
+                process(chery, entry.getValue());
+            }
+            else if (brand != null && brand.equalsIgnoreCase("oj")) {
+                process(oj, entry.getValue());
+            }
+            else if (brand != null && brand.equalsIgnoreCase("lepas")) {
+                process(lepas, entry.getValue());
+            }
+            else if (brand != null && brand.equalsIgnoreCase("icaur")) {
+                process(icaur, entry.getValue());
+            }
+            else {
+                for(Entity entity : entry.getValue()) {
+                    System.out.println("无品牌：" + entity.getString1());
+                }
+            }
         }
-        System.out.println(sbf);
-//        a();
-//        b();
+    }
+
+    private static void process(List<Entity> list, List<Entity> inDBs) {
+        for (Entity inDB : inDBs) {
+            boolean found = false;
+            for (Entity entity : list) {
+                if (Objects.equals(entity.getString1(), inDB.getString1())) {
+                    // 同一个物料
+                    found = true;
+                    if (!Objects.equals(entity.getString2(), inDB.getString2())
+                            || !Objects.equals(entity.getString3(), inDB.getString3())) {
+                        System.out.println("车型：" + inDB.getString1() + "有变化");
+                    }
+                    break;
+                }
+            }
+            if (!found) {
+                System.out.println("新车型：" + inDB.getString1());
+            }
+        }
+    }
+
+    private static void findVin() throws Exception {
+        File directory = new File("C:\\Users\\00537025\\Downloads\\EnatisVehicleInformation_20260318");
+        ArrayList<JSONObject> list = new ArrayList();
+        for (File file : directory.listFiles()) {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            StringBuilder sb = new StringBuilder();
+            for (String line = br.readLine(); line != null; line = br.readLine()) {
+                sb.append(line);
+            }
+            list.add(JSONObject.parseObject(sb.toString()));
+        }
+        String[] vinNumbers = new String[]{"LNNBBDEG9SC133637", "LVVDB21B6SD431645", "LVVDB21B7SD593333",
+                "LVUGTBHD0TD060716", "LVVDB11B8SC194401", "LVVDB11B1SC118888"};
+        list.forEach(obj -> {
+            JSONArray vehicles = obj.getJSONArray("vehicles");
+            for (int i = 0; i < vehicles.size(); i++) {
+                JSONObject vehicle = vehicles.getJSONObject(i);
+                for (String vin : vinNumbers) {
+                    if (Objects.equals(vehicle.getString("vin_chassis_number"), vin)) {
+                        System.out.println(vehicle);
+                    }
+                }
+            }
+        });
     }
 
     private static void b() throws Exception {

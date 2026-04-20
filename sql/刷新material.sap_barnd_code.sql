@@ -1,0 +1,1 @@
+update material set sap_brand_code=if(SUBSTRING(model_code, 1, 1)='O', 'JY07', 'JY12') where brand_code='OJ';

@@ -1,9 +1,12 @@
+-- material, mode, 748
 select a.code as 'material code', b.code as 'model code', b.name as 'model name',
     c.label as 'enats code', d.name as 'color description', a.brand_code
 from material a
-         left join model b on a.model_code=b.code
-         left join chery_iotd_admin.sys_dict_item c on b.code=c.item_value and c.dict_type='sa_model_code_2_number'
-         left join color d on a.ex_color=d.code;
+         left join model b on a.model_code=b.code and b.del_flag=0
+         left join chery_iotd_admin.sys_dict_item c on b.code=c.item_value and c.dict_type='sa_model_code_2_number' and c.del_flag=0
+         left join color d on a.ex_color=d.code and d.del_flag=0
+where a.del_flag=0;
 
-select * from material where code='T7160GLBWKW0002';
-select * from tracking_dealer_vehicle where vin='LNNBBDEGXSC194625';
+-- dealership, 247
+select sales_erp as 'delaer_code', name as 'dealer_name' from chery_iotd_admin.dealer_base_info where del_flag=0 and dealer_type in(1, 3) and dealer_code in (
+    select dealer_code from chery_iotd_admin.sale_org_dealer_relation where sale_org_code in (select code from chery_iotd_admin.sys_sales_org where type=0) and `status`=1)
