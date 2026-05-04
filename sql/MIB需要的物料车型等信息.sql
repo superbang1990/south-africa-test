@@ -1,4 +1,4 @@
--- material, mode, 748
+-- material, mode, 764
 select a.code as 'material code', b.code as 'model code', b.name as 'model name',
     c.label as 'enats code', d.name as 'color description', a.brand_code
 from material a

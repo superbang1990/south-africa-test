@@ -2,7 +2,6 @@ package org.marsclub.test;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import org.apache.commons.math3.util.Pair;
 
 import java.io.*;
 import java.util.*;
@@ -21,7 +20,7 @@ public class Temp {
     public static void main(String[] args) throws Exception {
         a();
 //        findVin();
-//        maintainModels();
+        maintainModels();
     }
 
     private static void maintainModels() {
@@ -29,8 +28,8 @@ public class Temp {
                 oj = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 1),
                 lepas = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 2),
                 icaur = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 3);
-
-        List<Entity> allInDB = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 7);
+        List<Entity> unconfirmed = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 7);
+        List<Entity> allInDB = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 8);
         HashMap<String, List<Entity>> brandToEntities = new HashMap<>();
         allInDB.forEach(entity -> {
             List<Entity> list;
@@ -41,19 +40,30 @@ public class Temp {
             }
             list.add(entity);
         });
+        HashMap<String, List<Entity>> unConfirmedMap = new HashMap<>();
+        unconfirmed.forEach(entity -> {
+            List<Entity> list;
+            if (unConfirmedMap.containsKey(entity.getString1())) {
+                list = unConfirmedMap.get(entity.getString1());
+            } else {
+                unConfirmedMap.put(entity.getString1().toLowerCase(), list = new ArrayList<>());
+            }
+            list.add(entity);
+        });
+
         for(Map.Entry<String, List<Entity>> entry : brandToEntities.entrySet()) {
             String brand = entry.getKey();
             if (brand != null && brand.equalsIgnoreCase("chery")) {
-                process(chery, entry.getValue());
+                process(chery, unConfirmedMap.get("chery"), entry.getValue());
             }
             else if (brand != null && brand.equalsIgnoreCase("oj")) {
-                process(oj, entry.getValue());
+                process(oj, unConfirmedMap.get("oj"), entry.getValue());
             }
             else if (brand != null && brand.equalsIgnoreCase("lepas")) {
-                process(lepas, entry.getValue());
+                process(lepas, unConfirmedMap.get("lepas"), entry.getValue());
             }
             else if (brand != null && brand.equalsIgnoreCase("icaur")) {
-                process(icaur, entry.getValue());
+                process(icaur, unConfirmedMap.get("icaur"), entry.getValue());
             }
             else {
                 for(Entity entity : entry.getValue()) {
@@ -63,7 +73,7 @@ public class Temp {
         }
     }
 
-    private static void process(List<Entity> list, List<Entity> inDBs) {
+    private static void process(List<Entity> list, List<Entity> unconfirmed, List<Entity> inDBs) {
         for (Entity inDB : inDBs) {
             boolean found = false;
             for (Entity entity : list) {
@@ -74,6 +84,13 @@ public class Temp {
                             || !Objects.equals(entity.getString3(), inDB.getString3())) {
                         System.out.println("车型：" + inDB.getString1() + "有变化");
                     }
+                    break;
+                }
+            }
+            // 再尝试从未确认列表中找
+            for (Entity entity : unconfirmed) {
+                if (Objects.equals(entity.getString2(), inDB.getString1())) {
+                    found =  true;
                     break;
                 }
             }

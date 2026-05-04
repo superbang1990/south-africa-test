@@ -1,0 +1,18 @@
+{
+  "Api": "Interface/reportPartSales",
+  "Input": {"data":[{"partNumber":"PN001",
+  "description":"SD PANEL-RH",
+  "invoiceNo":"INV001",
+  "invoiceDate":"2023-10-07T00:00:00Z",
+  "category":"A","orderNo":"ORD001",
+  "claimNo":"CLM001",
+  "exVATVal":"100.00",
+  "vatVal":"13.00",
+  "totalVal":"113.00",
+  "group":"IAL001",
+  "company":"EV001",
+  "branch":"EV001",
+  "providerCode":"PROV001"}]},
+  "LangId": 1033
+}
+
