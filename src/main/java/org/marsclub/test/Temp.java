@@ -33,18 +33,18 @@ public class Temp {
         HashMap<String, List<Entity>> brandToEntities = new HashMap<>();
         allInDB.forEach(entity -> {
             List<Entity> list;
-            if (brandToEntities.containsKey(entity.getString6())) {
-                list = brandToEntities.get(entity.getString6());
+            if (brandToEntities.containsKey(entity.getString6().toLowerCase())) {
+                list = brandToEntities.get(entity.getString6().toLowerCase());
             } else {
-                brandToEntities.put(entity.getString6(), list = new ArrayList<>());
+                brandToEntities.put(entity.getString6().toLowerCase(), list = new ArrayList<>());
             }
             list.add(entity);
         });
         HashMap<String, List<Entity>> unConfirmedMap = new HashMap<>();
         unconfirmed.forEach(entity -> {
             List<Entity> list;
-            if (unConfirmedMap.containsKey(entity.getString1())) {
-                list = unConfirmedMap.get(entity.getString1());
+            if (unConfirmedMap.containsKey(entity.getString1().toLowerCase())) {
+                list = unConfirmedMap.get(entity.getString1().toLowerCase());
             } else {
                 unConfirmedMap.put(entity.getString1().toLowerCase(), list = new ArrayList<>());
             }
@@ -77,7 +77,7 @@ public class Temp {
         for (Entity inDB : inDBs) {
             boolean found = false;
             for (Entity entity : list) {
-                if (Objects.equals(entity.getString1(), inDB.getString1())) {
+                if (Objects.equals(entity.getString1().trim(), inDB.getString1().trim())) {
                     // 同一个物料
                     found = true;
                     if (!Objects.equals(entity.getString2(), inDB.getString2())
@@ -88,10 +88,12 @@ public class Temp {
                 }
             }
             // 再尝试从未确认列表中找
-            for (Entity entity : unconfirmed) {
-                if (Objects.equals(entity.getString2(), inDB.getString1())) {
-                    found =  true;
-                    break;
+            if (!found) {
+                for (Entity entity : unconfirmed) {
+                    if (Objects.equals(entity.getString2().trim(), inDB.getString1().trim())) {
+                        found =  true;
+                        break;
+                    }
                 }
             }
             if (!found) {
