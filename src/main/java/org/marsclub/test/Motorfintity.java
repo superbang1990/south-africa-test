@@ -2,12 +2,14 @@ package org.marsclub.test;
 
 import com.alibaba.excel.util.StringUtils;
 import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 
+import java.io.*;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Motorfintity {
 
@@ -19,10 +21,10 @@ public class Motorfintity {
     private final HashMap<String, String> mibCodeMap = new HashMap<>();
 
     {
-        JSONObject json = INFO_JSON.getJSONObject("mibcode");
-        json.forEach((key, value) -> {
-            mibCodeMap.put(key, value.toString());
-        });
+//        JSONObject json = INFO_JSON.getJSONObject("mibcode");
+//        json.forEach((key, value) -> {
+//            mibCodeMap.put(key, value.toString());
+//        });
     }
 
     public String mibCodeOfChery() {
@@ -52,6 +54,95 @@ public class Motorfintity {
         headersMap.put("Authorization", "Bearer " + getAccessToken());
         headersMap.put("Content-Type", "application/json");
         return headersMap;
+    }
+
+    public static void main(String[] args) throws Exception{
+        new Motorfintity().printLatestStatus();
+    }
+
+    public void printLatestStatus() throws Exception {
+        File directory = new File("D:\\EnatisVehicleInformation");
+        File output = new File("D:\\EnatisVehicleInformation\\reported.csv");
+        if (output.exists()) {
+            output.delete();
+        }
+        output.createNewFile();
+        Set<String> set = new HashSet<>();
+        BufferedWriter bw = new BufferedWriter(new FileWriter(output));
+        for (File file : directory.listFiles()) {
+            FileInputStream reader = new FileInputStream(file);
+            int a = reader.available();
+            byte[] bytes = IOUtils.readFully(reader, a);
+            JSONObject object;
+            try {
+                object = JSONObject.parse(new String(bytes));
+            } catch (JSONException e) {
+//                e.printStackTrace();
+                System.out.println(file.getName() + ", ");
+//                System.out.println(new String(bytes));
+                continue;
+            }
+            JSONArray vehicles = object.getJSONArray("vehicles");
+            System.out.println(file.getName() + "包含数据：" + vehicles.size() + "条");
+            for (int i = 0; i < vehicles.size(); i++) {
+                JSONObject vehicle = vehicles.getJSONObject(i);
+                StringBuilder builder = new StringBuilder();
+                String enatisState;
+                boolean isLocked, vehicleAvailable;
+                builder.append(vehicle.getString("mib_code")).append(",")
+                        .append(vehicle.getString("mib_name")).append(",")
+                        .append(vehicle.getString("vin_chassis_number")).append(",")
+                        .append(vehicle.getString("unit_number")).append(",")
+                        .append(vehicle.getString("engine_number")).append(",")
+                        .append(vehicle.getString("model_number")).append(",")
+                        .append(vehicle.getString("model_description")).append(",")
+                        .append(vehicle.getString("is_introduced")).append(",")
+                        .append(vehicle.getString("introduction_date")).append(",")
+                        .append(vehicle.getString("register_number")).append(",")
+                        .append(vehicle.getString("certificate_number")).append(",")
+                        .append(vehicle.getString("previous_certificate_number")).append(",")
+                        .append(vehicle.getString("owner")).append(",")
+                        .append(vehicle.getString("owner_business_register_number")).append(",")
+                        .append(vehicle.getString("title_holder")).append(",")
+                        .append(vehicle.getString("title_holder_business_register_number")).append(",")
+                        .append(enatisState = vehicle.getString("enatis_state")).append(",")
+                        .append(vehicle.getString("enatis_state_date")).append(",")
+                        .append(vehicleAvailable = vehicle.getBoolean("vehicle_available")).append(",")
+                        .append(isLocked = vehicle.getBoolean("record_locked")).append(",")
+                        .append(vehicle.getString("last_query_date")).append(",");
+                if (isLocked) {
+//                    builder.append(",").append(false);
+                    continue;
+                }
+                else if (!vehicleAvailable) {
+                    set.add(enatisState);
+                    if (Objects.equals(enatisState, "Pending (Sale of used MV)")
+                            || Objects.equals(enatisState, "Registered (Exempt from licensing)")
+                            || Objects.equals(enatisState, "Registered (Liable for licensing)")
+                            || Objects.equals(enatisState, "Exported while exempt from licensing")
+                            || Objects.equals(enatisState, "Licensed")) {
+                        builder.append("MIB Released").append(",").append(false);
+                    } else {
+                        builder.append(",").append(false);
+                    }
+                }
+                else if (!Objects.equals(enatisState, "Introduced by on-line MIB-MIB controlled") && !Objects.equals(enatisState, "Introduced by on-line MIB - released")) {
+                    builder.append("MIB Released").append(",").append(false);
+                }
+                else {
+                    if (Objects.equals(enatisState, "Introduced by on-line MIB - released")) {
+                        builder.append("MIB Released").append(",").append(true);
+                    }
+                    else {
+                        builder.append("MIB Controlled").append(",").append(true);
+                    }
+                }
+                builder.append("\r\n");
+                bw.write(builder.toString());
+                bw.flush();
+            }
+        }
+        System.out.println(Arrays.toString(set.toArray()));
     }
 
     public String getAccessToken() throws Exception {

@@ -213,3 +213,6 @@ where vin in (select vin
                       and oi.del_flag = '0'
                       and op.del_flag = '0'
                       and op.sap_status in ('SaleOrgAwaitingInvoice', 'SaleOrgPosted')) temp);
+
+select b.dealer_sale_erp, a.* from external_dealer_part_day_inventory a
+                                       left join chery_iotd_admin.dealer_customer_relation b on a.dealer_code=b.customer_ial

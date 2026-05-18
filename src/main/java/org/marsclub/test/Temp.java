@@ -21,6 +21,7 @@ public class Temp {
         a();
 //        findVin();
         maintainModels();
+        findNewDealership();
     }
 
     private static void maintainModels() {
@@ -28,8 +29,8 @@ public class Temp {
                 oj = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 1),
                 lepas = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 2),
                 icaur = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 3);
-        List<Entity> unconfirmed = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 7);
-        List<Entity> allInDB = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 8);
+        List<Entity> unconfirmed = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 4);
+        List<Entity> allInDB = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 5);
         HashMap<String, List<Entity>> brandToEntities = new HashMap<>();
         allInDB.forEach(entity -> {
             List<Entity> list;
@@ -99,6 +100,20 @@ public class Temp {
             if (!found) {
                 System.out.println("新车型：" + inDB.getString1());
             }
+        }
+    }
+
+    private static void findNewDealership() {
+        List<Entity> current = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 6),
+                inDBList = ExcelReadUtil.read("C:\\Users\\00537025\\Downloads\\motorfinity information.xlsx", 7);
+        outer:
+        for (Entity inDB : inDBList) {
+            for (Entity entity : current) {
+                if (Objects.equals(entity.getString1().trim(), inDB.getString1().trim())) {
+                    continue outer;
+                }
+            }
+            System.out.println("新经销商：" +  inDB.getString1());
         }
     }
 
